@@ -4,6 +4,6 @@
   },
   "deploy": {
     "rootDirectory": "api",
-    "startCommand": "python -m app"
+    "startCommand": "python app.py"
   }
 }
