@@ -28,10 +28,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# tighten this in production
+# CORS configuration
 origins = [
-    "http://localhost:5173",                # your Vite dev server
-    "https://bolo-landing-page-frontend-tw2z.vercel.app/",     # replace with your actual Vercel URL
+    "http://localhost:5173",                # local development
+    "https://bolo-landing-page-frontend-tw2z.vercel.app",     # production frontend URL
+    "*"                                     # allow all origins during initial deployment
 ]
 
 app.add_middleware(
