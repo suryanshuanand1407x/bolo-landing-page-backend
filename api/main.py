@@ -15,11 +15,13 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
+    # Missing credentials: will crash here and print a traceback => "unsuccessful"
     raise RuntimeError(
         "Missing Supabase credentials. "
         "Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables."
     )
 
+# Initialize Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI(
@@ -30,9 +32,9 @@ app = FastAPI(
 
 # CORS configuration
 origins = [
-    "http://localhost:5173",                # local development
-    "https://bolo-landing-page-frontend-tw2z.vercel.app",     # production frontend URL
-    "*"                                     # allow all origins during initial deployment
+    "http://localhost:5173",                                              # local dev
+    "https://bolo-landing-page-frontend-tw2z.vercel.app",                # your Vercel frontend
+    "*"                                                                   # allow all during initial rollout
 ]
 
 app.add_middleware(
@@ -65,6 +67,22 @@ class ContactResponse(BaseModel):
     message: str
     created_at: datetime
 
+# --- Startup Event ---
+
+@app.on_event("startup")
+async def on_startup():
+    # If we reach here, everything initialized OK
+    print("start successful")
+
+# --- Root Endpoint ---
+
+@app.get("/")
+async def read_root():
+    return {
+        "message": "Welcome to Bolo API!",
+        "frontend_url": "https://bolo-landing-page-frontend-tw2z.vercel.app"
+    }
+
 # --- Health Check ---
 
 @app.get("/health")
@@ -83,7 +101,6 @@ async def add_to_waitlist(entry: WaitlistEntry):
             .execute()
 
         if existing.data:
-            # return the existing entry
             item = existing.data[0]
             return WaitlistResponse(
                 id=item["id"],
@@ -122,7 +139,6 @@ async def get_all_waitlist():
             )
             for item in res.data
         ]
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -150,7 +166,6 @@ async def create_contact(contact: ContactMessage):
             message=data["message"],
             created_at=datetime.fromisoformat(data["created_at"])
         )
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -171,6 +186,5 @@ async def get_all_contacts():
             )
             for item in res.data
         ]
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
